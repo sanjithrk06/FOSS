@@ -1,0 +1,173 @@
+<template>
+  <div class="container">
+    <h1>Image Gallery</h1>
+    <div class="header">
+      <input type="file" @change="onFileChange" multiple />
+      <button @click="uploadImages">Upload Images</button>
+    </div>
+    <div v-if="images.length">
+      <h3>Image Gallery</h3>
+      <div class="gallery">
+        <div
+          v-for="(image, index) in images"
+          :key="index"
+          class="image-container"
+          @click="openPreview(index)"
+        >
+          <img :src="image.url" alt="Uploaded image" />
+          <p>{{ image.name }}</p>
+          <button class="delete-btn" @click.stop="deleteImage(index)">X</button>
+        </div>
+      </div>
+    </div>
+ 
+
+    <vue-easy-lightbox
+      :visible="visible"
+      :imgs="lightboxImages"
+      :index="currentIndex"
+      @hide="visible = false"
+    />
+  </div>
+</template>
+
+
+
+<script>
+import VueEasyLightbox from "vue-easy-lightbox";
+ 
+
+export default {
+  components: {
+    VueEasyLightbox,
+  },
+  data() {
+    return {
+      selectedFiles: [],
+      images: [],
+      visible: false,
+      currentIndex: 0,
+    };
+  },
+  computed: {
+    lightboxImages() {
+      return this.images.map((image) => image.url);
+    },
+  },
+  methods: {
+    onFileChange(event) {
+      const newFiles = Array.from(event.target.files);
+      this.selectedFiles = [...this.selectedFiles, ...newFiles];
+      this.previewImages(newFiles);
+    },
+    previewImages(files) {
+      const newImages = files.map((file) => ({
+        url: URL.createObjectURL(file),
+        name: file.name,
+      }));
+      this.images = [...this.images, ...newImages];
+    },
+    async uploadImages() {
+      const formData = new FormData();
+      this.selectedFiles.forEach((file) => {
+        formData.append("images[]", file);
+      });
+ 
+
+      try {
+        alert("Images uploaded successfully!");
+        this.selectedFiles = [];
+      } catch (error) {
+        console.error("Image upload failed:", error);
+      }
+    },
+    openPreview(index) {
+      this.currentIndex = index;
+      this.visible = true;
+    },
+    deleteImage(index) {
+      // Revoke the object URL to release memory
+      URL.revokeObjectURL(this.images[index].url);
+      // Remove the image from the list
+      this.images.splice(index, 1);
+    },
+  },
+};
+</script>
+
+
+
+<style scoped>
+.container {
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  padding: 5rem;
+  border-radius: 20px;
+  align-self: center;
+  justify-self: center;
+  background-color: rgba(47, 79, 79, 0.582);
+}
+.container h1{
+  font-size: 40px;
+  font-weight: 500;
+  color: white;
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  gap: .5rem;
+}
+.header input {
+  font-size:medium;
+  border-radius: 20px;
+  background-color: white;
+  font-family: sans-serif;
+  padding: 5px;
+  padding-left: 10px;
+}
+.header button {
+  background-color: rgba(9, 170, 9, 0.635);
+  color: white;
+  border: 0;
+  border-radius: 12px;
+}
+.gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  flex-wrap: wrap;
+}
+.image-container {
+  margin: 10px;
+  cursor: pointer;
+  position: relative;
+}
+.image-container img {
+  max-width: 200px;
+  max-height: 150px;
+  transition: transform 0.2s;
+}
+.image-container img:hover {
+  transform: scale(1.05);
+}
+.delete-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.delete-btn:hover {
+  background: darkred;
+}
+</style>
